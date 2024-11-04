@@ -2,6 +2,7 @@ package utils
 
 // This file will contain all file and folder related operations
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -42,14 +43,37 @@ func AddFile(path, fileName string, data []byte) error {
 		return fmt.Errorf("directory %s does not exist", path)
 	}
 	if checkIfFileExists(path, fileName) {
-		log.Println(fileName, "file already exists")
-		return nil
+		log.Println(fileName, "file already exists. overwriting")
 	}
 	err := os.WriteFile(filepath.Join(path, fileName), data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", fileName, err)
 	}
 	log.Println("File created:", fileName)
+	return nil
+}
+
+func AddJSONFile(path, fileName string, data interface{}) error {
+	if !checkIfFolderExists(path) {
+		return fmt.Errorf("directory %s does not exist", path)
+	}
+	if checkIfFileExists(path, fileName) {
+		log.Println(fileName, "file already exists")
+		return nil
+	}
+
+	// Marshal the data to JSON
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal data to JSON: %w", err)
+	}
+
+	// Write the JSON data to file
+	err = os.WriteFile(filepath.Join(path, fileName), jsonData, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to create file %s: %w", fileName, err)
+	}
+	log.Println("JSON file created:", fileName)
 	return nil
 }
 
@@ -76,6 +100,20 @@ func ReadFile(filePath string) (string, error) {
 		return "", fmt.Errorf("error reading file: %s", err)
 	}
 	return string(content), nil
+}
+
+func ReadJSONFile(filePath string, v interface{}) error {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error reading file: %s", err)
+	}
+
+	// Unmarshal the JSON content into the provided struct or map
+	err = json.Unmarshal(content, v)
+	if err != nil {
+		return fmt.Errorf("error unmarshaling JSON: %w", err)
+	}
+	return nil
 }
 
 // checkIfFolderExists checks if a folder exists at the given path.
