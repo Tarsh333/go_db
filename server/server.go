@@ -13,10 +13,11 @@ import (
 func StartServer() {
 	router := mux.NewRouter()
 	dbRouterV1 := router.PathPrefix("/db/v1/").Subrouter()
-	dbRouterV1.Use(checkAndAddUserDirectory)
+	// this will be added for each db (requests that are for adding data in a database) -> db name + user name
+	dbRouterV1.Use(checkAndAddDBDirectory)
+	// this for every request
 	dbRouterV1.Use(addResponseType)
 	var port int = 8000
-
 	fmt.Println("Server started at port ", port)
 	// TODO:: Move path and port to constant
 	// create a db folder inside which all the data resides

@@ -38,22 +38,25 @@ func DeleteFolder(path string) error {
 }
 
 // AddFile creates a file with the specified data in a given folder.
-func AddFile(path, fileName string, data []byte) error {
+func AddFile(path, fileName string, data string) error {
 	if !checkIfFolderExists(path) {
 		return fmt.Errorf("directory %s does not exist", path)
 	}
 	if checkIfFileExists(path, fileName) {
 		log.Println(fileName, "file already exists. overwriting")
 	}
-	err := os.WriteFile(filepath.Join(path, fileName), data, 0644)
+	err := os.WriteFile(filepath.Join(path, fileName), []byte(data), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", fileName, err)
 	}
+	fmt.Println(data)
 	log.Println("File created:", fileName)
 	return nil
 }
 
 func AddJSONFile(path, fileName string, data interface{}) error {
+	fileName = fileName + ".json"
+	fmt.Println(fileName)
 	if !checkIfFolderExists(path) {
 		return fmt.Errorf("directory %s does not exist", path)
 	}
@@ -133,4 +136,34 @@ func checkIfFileExists(path, fileName string) bool {
 		return false
 	}
 	return true
+}
+func IsValidJSON(data []byte) bool {
+	var js interface{}
+	return json.Unmarshal(data, &js) == nil
+}
+func MergeJSONStrings(jsonStrings ...string) (string, error) {
+	var mergedData []map[string]interface{}
+
+	for _, jsonString := range jsonStrings {
+		// Attempt to parse as an array of objects
+		var objArray []map[string]interface{}
+		if err := json.Unmarshal([]byte(jsonString), &objArray); err == nil {
+			// If successful, add all elements to the mergedData slice
+			mergedData = append(mergedData, objArray...)
+		} else {
+			// If not an array, attempt to parse as a single object
+			var obj map[string]interface{}
+			if err := json.Unmarshal([]byte(jsonString), &obj); err != nil {
+				return "", err
+			}
+			// Wrap the single object in a slice and append it to mergedData
+			mergedData = append(mergedData, obj)
+		}
+	}
+
+	mergedJSON, err := json.Marshal(mergedData)
+	if err != nil {
+		return "", err
+	}
+	return string(mergedJSON), nil
 }

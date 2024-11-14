@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 
@@ -10,23 +11,34 @@ import (
 )
 
 // Middleware to check and add a directory for each user ID
-func checkAndAddUserDirectory(next http.Handler) http.Handler {
+func checkAndAddDBDirectory(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var params model.RequestParams
 		err := json.NewDecoder(r.Body).Decode(&params)
+		if params.Action == "get" {
+			next.ServeHTTP(w, r)
+			return
+			// Add additional middleware logic here, e.g., authentication or logging
+		}
 		if err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		if params.Id == "" {
-			http.Error(w, "User ID cannot be empty", http.StatusBadRequest)
+		if params.Cluster == "" {
+			http.Error(w, "Cluster cannot be empty", http.StatusBadRequest)
+			return
+		}
+		if params.Database == "" {
+			http.Error(w, "Database cannot be empty", http.StatusBadRequest)
 			return
 		}
 
-		// Create the user directory if it doesn't already exist
-		utils.CreateFolder(filepath.Join("db", params.Id))
-
+		// Create the directory if it doesn't already exist
+		if err := utils.CreateFolder(filepath.Join("db", params.Cluster, params.Database)); err != nil {
+			fmt.Println("failed to add folder ", err)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
