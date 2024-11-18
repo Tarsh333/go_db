@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,6 +16,11 @@ func checkAndAddDBDirectory(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var params model.RequestParams
 		err := json.NewDecoder(r.Body).Decode(&params)
+		if err != nil {
+			fmt.Println("error decoding ", err)
+		}
+		ctx := context.WithValue(r.Context(), "params", params)
+		r = r.WithContext(ctx)
 		if params.Action == "get" {
 			next.ServeHTTP(w, r)
 			return
@@ -47,6 +53,7 @@ func checkAndAddDBDirectory(next http.Handler) http.Handler {
 func addResponseType(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
+		fmt.Println("added header")
 		next.ServeHTTP(w, r)
 	})
 }

@@ -49,7 +49,7 @@ func AddFile(path, fileName string, data string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", fileName, err)
 	}
-	fmt.Println(data)
+	// fmt.Println(data)
 	log.Println("File created:", fileName)
 	return nil
 }
@@ -137,6 +137,7 @@ func checkIfFileExists(path, fileName string) bool {
 	}
 	return true
 }
+
 func IsValidJSON(data []byte) bool {
 	var js interface{}
 	return json.Unmarshal(data, &js) == nil

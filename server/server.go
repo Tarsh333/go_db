@@ -17,11 +17,13 @@ func StartServer() {
 	dbRouterV1.Use(checkAndAddDBDirectory)
 	// this for every request
 	dbRouterV1.Use(addResponseType)
+	dbRouterV1.HandleFunc("/", handleReq)
 	var port int = 8000
 	fmt.Println("Server started at port ", port)
 	// TODO:: Move path and port to constant
 	// create a db folder inside which all the data resides
 	utils.CreateFolder("db")
+	utils.CheckAndInitMutex()
 	if err := http.ListenAndServe(":8000", router); err != nil {
 		panic(err)
 	}
